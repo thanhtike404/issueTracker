@@ -5,7 +5,7 @@ import { useConnectedUserStore } from '@/stores/socketIo/connectedUsers'
 
 function page() {
   const { connectedUserIds } = useConnectedUserStore();
-  console.log(connectedUserIds);
+
   return (
     <div>
       <IssueChart />

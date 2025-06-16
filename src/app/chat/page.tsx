@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Menu, Send, Smile, Paperclip } from "lucide-react"
 import { useConnectedUserStore } from "@/stores/socketIo/connectedUsers"
+import Image from "next/image"
 const initialChatData = {
   chatList: [
     {
@@ -223,7 +224,9 @@ export default function ChatPage() {
                 }`}
               >
                 <div className="relative">
-                  <img
+                  <Image
+                    height={40}
+                    width={40}
                     src={chat.avatar}
                     alt={chat.name}
                     className="w-10 h-10 rounded-full"
@@ -262,7 +265,9 @@ export default function ChatPage() {
             <Menu className="h-5 w-5" />
           </button>
           <div className="flex items-center ml-2">
-            <img
+            <Image
+              height={32}
+              width={32}
               src={activeChat.avatar}
               alt={activeChat.name}
               className="w-8 h-8 rounded-full"

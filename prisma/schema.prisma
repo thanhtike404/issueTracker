@@ -47,15 +47,15 @@ model User {
   role                  Int            @default(0)
   password              String?
   accounts              Account[]
-  sessions              Session[]
   issueCommands         IssueCommand[]
   assignedIssues        Issue[]        @relation("UserAssignedIssues")
   issues                Issue[]        @relation("UserIssues")
+  sentMessages          Message[]      @relation("MessageSender")
   sentNotifications     Notification[] @relation("NotificationSender")
   receivedNotifications Notification[] @relation("NotificationReceiver")
+  sessions              Session[]
   chats                 UserChat[]
-  sentMessages          Message[]      @relation("MessageSender") // Added this relation
-    
+
   @@map("users")
 }
 
@@ -92,11 +92,11 @@ model Issue {
 }
 
 model IssueImage {
-  id       Int    @id @default(autoincrement())
-  issueId  Int
-  imageUrl String
-  storageType     StorageType?     @default(value: CLOUDINARY)
-  issue    Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  id          Int          @id @default(autoincrement())
+  issueId     Int
+  imageUrl    String
+  storageType StorageType? @default(CLOUDINARY)
+  issue       Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
 
   @@index([issueId])
   @@map("issue_images")
@@ -140,26 +140,26 @@ model IssueCommand {
 }
 
 model Chat {
-  id        String    @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  type      ChatType  @default(PRIVATE)
+  type      ChatType   @default(PRIVATE)
   avatar    String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  members   UserChat[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   messages  Message[]
-  
+  members   UserChat[]
+
   @@map("chats")
 }
 
 model UserChat {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   chatId      String
   lastReadAt  DateTime?
-  unreadCount Int      @default(0)
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chat        Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  unreadCount Int       @default(0)
+  chat        Chat      @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, chatId])
   @@map("user_chats")
