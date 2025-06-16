@@ -46,6 +46,7 @@ model User {
   image                 String?
   role                  Int            @default(0)
   password              String?
+  clerkId               String?        @unique
   accounts              Account[]
   issueCommands         IssueCommand[]
   assignedIssues        Issue[]        @relation("UserAssignedIssues")
