@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { Webhook } from "svix";
 import { headers as getHeaders } from "next/headers";
-import prisma from "../../../../../prisma/client";
+import prisma from "../../../../../../prisma/client";
 export const dynamic = "force-dynamic"; // ensures it's not cached
 
 export async function POST(req: NextRequest) {
