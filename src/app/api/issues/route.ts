@@ -75,3 +75,72 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) {
+    return `${seconds} seconds ago`;
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) {
+    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+  }
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) {
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  }
+
+  // Fallback for longer durations (you can extend this or use a library like 'date-fns' or 'moment')
+  return date.toLocaleDateString();
+}
+
+export async function GET() {
+  try {
+    const issues = await prisma.issue.findMany({
+      include: {
+        assignedToUser: {
+          select: {
+            name: true, // Select only the name of the assigned user
+          },
+        },
+        issueCommands: {
+          select: {
+            id: true, // We only need to count them, so selecting the ID is enough
+          },
+        },
+      },
+    });
+
+    // Transform the fetched data into the desired format
+    const formattedIssues = issues.map(issue => ({
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      priority: issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1), // Capitalize first letter
+      status: issue.status.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()), // Convert ENUM to readable format
+      assignee: issue.assignedToUser?.name || 'Unassigned', // Use assigned user's name or 'Unassigned'
+      createdAt: formatTimeAgo(issue.createdAt), // Function to format date to "X time ago"
+      comments: issue.issueCommands.length, // Count the number of issue commands
+    }));
+
+    return NextResponse.json(formattedIssues, { status: 200 });
+  } catch (error) {
+    console.error('Error fetching issues:', error);
+    return NextResponse.json(
+      { message: 'Failed to fetch issues', error: (error as Error).message },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
