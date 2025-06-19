@@ -43,7 +43,6 @@
     "autoprefixer": "10.4.19",
     "aws-sdk": "^2.1639.0",
     "axios": "^1.7.2",
-    "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "classnames": "^2.5.1",
     "cloudinary": "^2.5.1",
@@ -86,8 +85,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.2",
-    "@types/bcryptjs": "^3.0.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/fslightbox-react": "^1.8.0",
     "@types/node": "20.12.12",
     "@types/uuid": "^10.0.0",
