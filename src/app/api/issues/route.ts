@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
-    // Create issue entry in DB
     const issue = await prisma.issue.create({
       data: { title, description, userId, priority },
     });
@@ -100,37 +99,53 @@ function formatTimeAgo(date: Date): string {
     return `${days} day${days === 1 ? '' : 's'} ago`;
   }
 
-  // Fallback for longer durations (you can extend this or use a library like 'date-fns' or 'moment')
   return date.toLocaleDateString();
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { searchParams } = request.nextUrl;
+  const rawStatus = searchParams.get('status')?.trim() || '';
+  const rawSearch = searchParams.get('search')?.trim() || '';
+
+  const status = rawStatus.length > 0 ? rawStatus.toUpperCase() : undefined;
+  const search = rawSearch.length > 0 ? rawSearch : undefined;
+  console.log('Status:', status);
+  console.log('Search:', search);
   try {
     const issues = await prisma.issue.findMany({
+      where: {
+        ...(status && { 
+          status
+         }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
+          ],
+        }),
+      },
       include: {
         assignedToUser: {
-          select: {
-            name: true, // Select only the name of the assigned user
-          },
+          select: { name: true },
         },
         issueCommands: {
-          select: {
-            id: true, // We only need to count them, so selecting the ID is enough
-          },
+          select: { id: true },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
 
-    // Transform the fetched data into the desired format
     const formattedIssues = issues.map(issue => ({
       id: issue.id,
       title: issue.title,
       description: issue.description,
-      priority: issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1), // Capitalize first letter
-      status: issue.status.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()), // Convert ENUM to readable format
-      assignee: issue.assignedToUser?.name || 'Unassigned', // Use assigned user's name or 'Unassigned'
-      createdAt: formatTimeAgo(issue.createdAt), // Function to format date to "X time ago"
-      comments: issue.issueCommands.length, // Count the number of issue commands
+      priority: issue.priority.charAt(0).toUpperCase() + issue.priority.slice(1),
+      status: issue.status.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase()),
+      assignee: issue.assignedToUser?.name || 'Unassigned',
+      createdAt: formatTimeAgo(issue.createdAt),
+      comments: issue.issueCommands.length,
     }));
 
     return NextResponse.json(formattedIssues, { status: 200 });
