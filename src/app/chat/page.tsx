@@ -8,13 +8,11 @@ import { useSession } from "next-auth/react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "react-toastify"
-
-
+import ChatSidebar from "@/components/chat/chat-sidebar"
+import { getChatName, getChatAvatar, getLastMessage, getOtherUsers } from '@/lib/chat-utils'
+import { useChatUtils } from '@/hooks/useChatUtils'
 
 export default function ChatPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -29,9 +27,10 @@ export default function ChatPage() {
   
   const { data: session } = useSession()
   const { connectedUserIds } = useConnectedUserStore()
-
-  console.log(connectedUserIds.length)
   
+
+  
+
   const {
     chats,
     activeChat,
@@ -152,122 +151,28 @@ export default function ChatPage() {
     <div className="flex h-screen">
       {/* Sidebar */}
       {sidebarVisible && (
-        <div className="w-80 border-r bg-background">
-          <div className="p-4 border-b">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Chats</h2>
-              <Dialog open={showCreateChat} onOpenChange={setShowCreateChat}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create New Chat</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <Input
-                      placeholder="Chat name"
-                      value={newChatName}
-                      onChange={(e) => setNewChatName(e.target.value)}
-                    />
-                    <Select value={newChatType} onValueChange={(value: 'PRIVATE' | 'GROUP') => setNewChatType(value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PRIVATE">Private</SelectItem>
-                        <SelectItem value="GROUP">Group</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button onClick={handleCreateChat} className="w-full">
-                      Create Chat
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search chats..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <div className="overflow-y-auto h-[calc(100vh-120px)]">
-            {loading ? (
-              <div className="p-4 text-center text-muted-foreground">Loading chats...</div>
-            ) : filteredChats.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                {searchQuery ? "No chats found" : "No chats yet"}
-              </div>
-            ) : (
-              filteredChats.map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => handleChatSelect(chat)}
-                  className={`flex items-center p-4 border-b cursor-pointer hover:bg-accent/10 ${
-                    activeChat?.id === chat.chat.id ? "bg-accent/10" : ""
-                  }`}
-                >
-                  <div className="relative">
-                    <Image
-                      height={40}
-                      width={40}
-                      src={getChatAvatar(chat)}
-                      alt={getChatName(chat)}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    {chat.unreadCount > 0 && (
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                        {chat.unreadCount}
-                      </Badge>
-                    )}
-                    {/* Online indicator for private chats */}
-                    {chat.chat.type === 'PRIVATE' && (() => {
-                      const otherUser = chat.chat.userChats.find((uc: any) => uc.userId !== session?.user?.id)
-                      if (otherUser?.user?.id) {
-                        return (
-                          <div className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background ${
-                            isUserOnline(otherUser.user.id) ? 'bg-green-500' : 'bg-gray-400'
-                          }`} />
-                        )
-                      }
-                      return null
-                    })()}
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-sm font-medium">{getChatName(chat)}</h3>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(chat.chat.updatedAt).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">
-                      {getLastMessage(chat)}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <ChatSidebar
+          showCreateChat={showCreateChat}
+          setShowCreateChat={setShowCreateChat}
+          newChatName={newChatName}
+          setNewChatName={setNewChatName}
+          newChatType={newChatType}
+          setNewChatType={setNewChatType}
+          session={session}
+          handleCreateChat={handleCreateChat}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          loading={loading}
+          filteredChats={filteredChats}
+          activeChat={activeChat}
+          handleChatSelect={handleChatSelect}
+          getChatAvatar={getChatAvatar}
+          isUserOnline={isUserOnline}
+          getChatName={getChatName}
+          getLastMessage={getLastMessage}
+        />
       )}
-      {/* {activeUserCount && (
-        <div className="p-4">
-          <h3 className="text-sm font-medium">Active User Count</h3>
-          <p className="text-sm text-muted-foreground">{activeUserCount}</p>
-        </div>
-      )} */}
+ 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
