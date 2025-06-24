@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useMemo } from "react"
-import { Menu, Send, Smile, Paperclip, Plus, Users, Search } from "lucide-react"
+import { Menu, Send, Smile, Paperclip,  Users } from "lucide-react"
 import { useConnectedUserStore } from "@/stores/socketIo/connectedUsers"
 import { useChat } from "@/hooks/useChat"
 import { useSession } from "next-auth/react"
@@ -13,6 +13,9 @@ import { toast } from "react-toastify"
 import ChatSidebar from "@/components/chat/chat-sidebar"
 import { getChatName, getChatAvatar, getLastMessage, getOtherUsers } from '@/lib/chat-utils'
 import { useChatUtils } from '@/hooks/useChatUtils'
+import ChatHeader from '@/components/chat/ChatHeader'
+import ChatMessages from '@/components/chat/ChatMessages'
+import MessageInput from '@/components/chat/MessageInput'
 
 export default function ChatPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -119,7 +122,7 @@ export default function ChatPage() {
     return chat.chat.name
   }
 
-  // Check if user is online
+  // Check if user is onlineSearch
   const isUserOnline = (userId: string) => {
     return connectedUserIds.includes((userId))
   }
@@ -149,7 +152,7 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
+ 
       {sidebarVisible && (
         <ChatSidebar
           showCreateChat={showCreateChat}
@@ -172,133 +175,37 @@ export default function ChatPage() {
           getLastMessage={getLastMessage}
         />
       )}
- 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="sticky top-0 flex items-center gap-2 border-b bg-background p-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSidebarVisible(!sidebarVisible)}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
-          {activeChat ? (
-            <div className="flex items-center ml-2">
-              <div className="relative">
-                <Image
-                  height={32}
-                  width={32}
-                  src={getChatAvatar({ chat: activeChat })}
-                  alt={getChatName({ chat: activeChat })}
-                  className="w-8 h-8 rounded-full"
-                />
-                {/* Online indicator in header */}
-                {activeChat.type === 'PRIVATE' && (() => {
-                  const otherUser = getOtherUsers()[0]
-                  if (otherUser?.id) {
-                    return (
-                      <div className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background ${
-                        isUserOnline(otherUser.id) ? 'bg-green-500' : 'bg-gray-400'
-                      }`} />
-                    )
-                  }
-                  return null
-                })()}
-              </div>
-              <div className="ml-3">
-                <h2 className="text-sm font-medium">{getChatName({ chat: activeChat })}</h2>
-                <p className="text-xs text-muted-foreground">
-                  {activeChat.type === 'PRIVATE' 
-                    ? (() => {
-                        const otherUser = getOtherUsers()[0]
-                        if (!otherUser?.id) return 'Offline'
-                        return isUserOnline(otherUser.id) ? 'Online' : 'Offline'
-                      })()
-                    : `${activeChat.userChats.length} participants`
-                  }
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="ml-2">
-              <h2 className="text-sm font-medium">Select a chat to start messaging</h2>
-            </div>
-          )}
-        </header>
 
-        {/* Messages */}
+
+      <div className="flex-1 flex flex-col">
+  
+        <ChatHeader
+          activeChat={activeChat}
+          getChatAvatar={getChatAvatar}
+          getChatName={getChatName}
+          getOtherUsers={getOtherUsers}
+          isUserOnline={isUserOnline}
+          setSidebarVisible={setSidebarVisible}
+          sidebarVisible={sidebarVisible}
+          session={session}
+        />
+
+   
         <main className="flex-1 overflow-auto p-4 bg-muted/50">
-          {!activeChat ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Select a chat to start messaging</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.senderId === session?.user?.id ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[75%] rounded-lg px-4 py-2 ${
-                      msg.senderId === session?.user?.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background border'
-                    }`}
-                  >
-                    <p>{msg.content}</p>
-                    <p className="text-xs mt-1 text-muted-foreground text-right">
-                      {new Date(msg.timestamp).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                      {msg.senderId === session?.user?.id && (
-                        <span className="ml-1">
-                          {msg.read ? '✓✓' : '✓'}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
+          <ChatMessages
+            messages={messages}
+            activeChat={activeChat}
+            session={session}
+          />
         </main>
 
-        {/* Message Input */}
-        <div className="sticky bottom-0 border-t bg-background p-4">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              <Paperclip className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Smile className="h-5 w-5" />
-            </Button>
-            <Input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Type a message..."
-              disabled={!activeChat || !isConnected}
-              className="flex-1"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!activeChat || !isConnected || !message.trim()}
-              size="sm"
-            >
-              <Send className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
+        <MessageInput
+          message={message}
+          setMessage={setMessage}
+          handleSendMessage={handleSendMessage}
+          handleKeyPress={handleKeyPress}
+          disabled={!activeChat || !isConnected}
+        />
       </div>
     </div>
   )

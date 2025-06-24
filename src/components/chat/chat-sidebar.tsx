@@ -4,7 +4,7 @@ import { Input } from '../ui/input'
 import { Search } from 'lucide-react'
 import Image from 'next/image'
 import { Badge } from '../ui/badge'
-import { Session } from 'next-auth'
+
 import { ChatSidebarProps } from '@/types/chat'
 
 function ChatSidebar(
