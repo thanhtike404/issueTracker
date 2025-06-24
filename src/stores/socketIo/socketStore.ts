@@ -9,8 +9,8 @@ type SocketState = {
     connect: (token: string) => void;
     disconnect: () => void;
 };
-
 export const useSocketStore = create<SocketState>((set, get) => ({
+  
     isConnected: false,
     socket: null,
 
@@ -24,11 +24,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
             autoConnect: true,
             reconnectionAttempts: 3,
         });
-
+        
         socket
             .on('connect', () => set({ isConnected: true, socket }))
             .on('disconnect', () => set({ isConnected: false, socket: null }));
-
+        
         set({ socket });
     },
 

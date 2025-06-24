@@ -155,7 +155,6 @@ export const useChat = () => {
     });
   }, [socket]);
 
-  // Set active chat
   const selectChat = useCallback((chat: any) => {
     setActiveChat(chat);
     if (chat) {
@@ -164,7 +163,6 @@ export const useChat = () => {
     }
   }, [setActiveChat, fetchChatMessages, joinChat]);
 
-  // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -183,9 +181,9 @@ export const useChat = () => {
       deleteMessage(data.messageId);
     };
 
-    // New chat created
+
     const handleNewChat = (chat: any) => {
-      // Convert to UserChat format
+    
       const userChat: UserChat = {
         id: `uc_${Date.now()}`,
         userId: session?.user?.id || '',
@@ -209,7 +207,7 @@ export const useChat = () => {
     };
   }, [socket, addMessage, updateMessage, deleteMessage, addChat, session?.user?.id]);
 
-  // Fetch chats when connected
+
   useEffect(() => {
     if (isConnected && session?.user?.id) {
       fetchUserChats();
@@ -218,7 +216,7 @@ export const useChat = () => {
   }, [isConnected, session?.user?.id, fetchUserChats, getUnreadCount]);
 
   return {
-    // State
+
     chats,
     activeChat,
     messages,
@@ -226,7 +224,7 @@ export const useChat = () => {
     error,
     isConnected,
 
-    // Actions
+
     fetchUserChats,
     sendMessage,
     createChat,

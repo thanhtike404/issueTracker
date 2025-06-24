@@ -2,8 +2,8 @@
 import { create } from 'zustand';
 
 type ConnectedUserStore = {
-    connectedUserIds: number[];
-    setConnectedUserIds: (ids: number[]) => void;
+    connectedUserIds: string[];
+    setConnectedUserIds: (ids: string[]) => void;
 };
 
 export const useConnectedUserStore = create<ConnectedUserStore>((set) => ({

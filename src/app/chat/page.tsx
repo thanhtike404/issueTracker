@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Menu, Send, Smile, Paperclip, Plus, Users, Search } from "lucide-react"
 import { useConnectedUserStore } from "@/stores/socketIo/connectedUsers"
 import { useChat } from "@/hooks/useChat"
@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "react-toastify"
 
+
+
 export default function ChatPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const [message, setMessage] = useState("")
@@ -22,10 +24,14 @@ export default function ChatPage() {
   const [newChatName, setNewChatName] = useState("")
   const [newChatType, setNewChatType] = useState<'PRIVATE' | 'GROUP'>('PRIVATE')
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [activeUserCount, setActiveUserCount] = useState<any>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const { data: session } = useSession()
   const { connectedUserIds } = useConnectedUserStore()
+
+  console.log(connectedUserIds.length)
+  
   const {
     chats,
     activeChat,
@@ -44,10 +50,12 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Filter chats based on search query
-  const filteredChats = chats.filter(chat => 
-    chat.chat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Memoize filtered chats to prevent unnecessary re-renders
+  const filteredChats = useMemo(() => {
+    return chats.filter(chat => 
+      chat.chat.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  }, [chats, searchQuery])
 
   const handleSendMessage = () => {
     if (!message.trim() || !activeChat) return
@@ -111,6 +119,23 @@ export default function ChatPage() {
     }
     return chat.chat.name
   }
+
+  // Check if user is online
+  const isUserOnline = (userId: string) => {
+    return connectedUserIds.includes((userId))
+  }
+
+  // Handle chat selection without refreshing
+  const handleChatSelect = (chat: any) => {
+    if (activeChat?.id === chat.chat.id) return // Don't re-select the same chat
+    selectChat(chat.chat)
+  }
+
+  useEffect(() => {
+    if (connectedUserIds) {
+      setActiveUserCount(connectedUserIds)
+    }
+  }, [connectedUserIds])
 
   if (error) {
     return (
@@ -186,7 +211,7 @@ export default function ChatPage() {
               filteredChats.map((chat) => (
                 <div
                   key={chat.id}
-                  onClick={() => selectChat(chat.chat)}
+                  onClick={() => handleChatSelect(chat)}
                   className={`flex items-center p-4 border-b cursor-pointer hover:bg-accent/10 ${
                     activeChat?.id === chat.chat.id ? "bg-accent/10" : ""
                   }`}
@@ -204,6 +229,18 @@ export default function ChatPage() {
                         {chat.unreadCount}
                       </Badge>
                     )}
+                    {/* Online indicator for private chats */}
+                    {chat.chat.type === 'PRIVATE' && (() => {
+                      const otherUser = chat.chat.userChats.find((uc: any) => uc.userId !== session?.user?.id)
+                      if (otherUser?.user?.id) {
+                        return (
+                          <div className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background ${
+                            isUserOnline(otherUser.user.id) ? 'bg-green-500' : 'bg-gray-400'
+                          }`} />
+                        )
+                      }
+                      return null
+                    })()}
                   </div>
                   <div className="ml-3 flex-1">
                     <div className="flex justify-between items-center">
@@ -225,7 +262,12 @@ export default function ChatPage() {
           </div>
         </div>
       )}
-
+      {/* {activeUserCount && (
+        <div className="p-4">
+          <h3 className="text-sm font-medium">Active User Count</h3>
+          <p className="text-sm text-muted-foreground">{activeUserCount}</p>
+        </div>
+      )} */}
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
@@ -240,22 +282,35 @@ export default function ChatPage() {
           
           {activeChat ? (
             <div className="flex items-center ml-2">
-              <Image
-                height={32}
-                width={32}
-                src={getChatAvatar({ chat: activeChat })}
-                alt={getChatName({ chat: activeChat })}
-                className="w-8 h-8 rounded-full"
-              />
+              <div className="relative">
+                <Image
+                  height={32}
+                  width={32}
+                  src={getChatAvatar({ chat: activeChat })}
+                  alt={getChatName({ chat: activeChat })}
+                  className="w-8 h-8 rounded-full"
+                />
+                {/* Online indicator in header */}
+                {activeChat.type === 'PRIVATE' && (() => {
+                  const otherUser = getOtherUsers()[0]
+                  if (otherUser?.id) {
+                    return (
+                      <div className={`absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background ${
+                        isUserOnline(otherUser.id) ? 'bg-green-500' : 'bg-gray-400'
+                      }`} />
+                    )
+                  }
+                  return null
+                })()}
+              </div>
               <div className="ml-3">
                 <h2 className="text-sm font-medium">{getChatName({ chat: activeChat })}</h2>
                 <p className="text-xs text-muted-foreground">
                   {activeChat.type === 'PRIVATE' 
                     ? (() => {
-                        const otherUser = getOtherUsers()[0];
-                        if (!otherUser?.id) return 'Offline';
-                        const userId = parseInt(otherUser.id);
-                        return connectedUserIds.includes(userId) ? 'Online' : 'Offline';
+                        const otherUser = getOtherUsers()[0]
+                        if (!otherUser?.id) return 'Offline'
+                        return isUserOnline(otherUser.id) ? 'Online' : 'Offline'
                       })()
                     : `${activeChat.userChats.length} participants`
                   }
