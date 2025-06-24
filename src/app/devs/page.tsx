@@ -12,6 +12,7 @@ import {
   SortingState,
   VisibilityState,
 } from '@tanstack/react-table';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,8 @@ import { ChevronDown } from 'lucide-react';
 import { getColumns } from './columns';
 import { useDevs } from '@/hooks/useDevs';
 import { useUpdateDevRole } from '@/hooks/useUpdateDevRole';
+import { useConnectedUserStore } from '@/stores/socketIo/connectedUsers';
+import { useChat } from '@/hooks/useChat';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,12 +47,47 @@ export default function DataTableDemo() {
   const { data: users, isLoading } = useDevs();
   const updateRole = useUpdateDevRole();
   const { handleSendNotification } = useNotification();
+  const { connectedUserIds } = useConnectedUserStore();
+  const router = useRouter();
+  const { chats, createChat, fetchUserChats, selectChat } = useChat();
 
   const handleRoleChange = (id: string, role: string) => {
     updateRole.mutate({ id, role });
   };
 
-  const columns = getColumns({ handleRoleChange, handleSendNotification, sessionUserId: session?.user?.id, sessionUserRole: session?.user?.role });
+  // Handler to start or open a private chat
+  const onStartPrivateChat = async (userId: string, userName: string) => {
+    if (!session?.user?.id) return;
+    // Check if a private chat already exists
+    let privateChat = chats.find(
+      c => c.chat.type === 'PRIVATE' &&
+        c.chat.userChats.some(uc => uc.userId === userId) &&
+        c.chat.userChats.some(uc => uc.userId === session.user.id)
+    );
+    if (privateChat) {
+      // Go to chat page and select this chat
+      router.push(`/chat?chatId=${privateChat.chat.id}`);
+      return;
+    }
+    // Otherwise, create a new private chat
+    createChat(userName, 'PRIVATE', [userId]);
+    // Wait a moment for the chat to be created, then refetch and select
+    setTimeout(async () => {
+      await fetchUserChats();
+      const updatedChats = chats.find(
+        c => c.chat.type === 'PRIVATE' &&
+          c.chat.userChats.some(uc => uc.userId === userId) &&
+          c.chat.userChats.some(uc => uc.userId === session.user.id)
+      );
+      if (updatedChats) {
+        router.push(`/chat?chatId=${updatedChats.chat.id}`);
+      } else {
+        router.push('/chat');
+      }
+    }, 1000);
+  };
+
+  const columns = getColumns({ handleRoleChange, handleSendNotification, sessionUserId: session?.user?.id, sessionUserRole: session?.user?.role, connectedUserIds, onStartPrivateChat });
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);

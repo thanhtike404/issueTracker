@@ -38,14 +38,19 @@ interface ColumnProps {
   }) => void
   sessionUserId?: string
   sessionUserRole?: number
+  connectedUserIds?: string[]
+  onStartPrivateChat?: (userId: string, userName: string) => void;
 }
 
 export const getColumns = ({
   handleRoleChange,
   handleSendNotification,
   sessionUserId,
-  sessionUserRole
-}: ColumnProps): ColumnDef<Developer>[] => [
+  sessionUserRole,
+  connectedUserIds = [],
+  onStartPrivateChat
+}: ColumnProps): ColumnDef<Developer>[] => {
+  const baseColumns: ColumnDef<Developer>[] = [
     {
       accessorKey: "name",
       header: "Name",
@@ -56,15 +61,34 @@ export const getColumns = ({
       header: "Email",
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
+  ];
+
+  // Add Online column for admins only
+  if (sessionUserRole === 2) {
+    baseColumns.unshift({
+      id: 'online',
+      header: 'Online',
+      cell: ({ row }) => {
+        const dev = row.original;
+        const isOnline = connectedUserIds.includes(dev.id);
+        return (
+          <span title={isOnline ? 'Online' : 'Offline'}>
+            <span className={`inline-block w-3 h-3 rounded-full mr-1 align-middle ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+            {isOnline ? 'Online' : 'Offline'}
+          </span>
+        );
+      },
+      enableHiding: false,
+    });
+  }
+
+  baseColumns.push(
     {
       id: 'actions',
       enableHiding: false,
       cell: ({ row }) => {
         const dev = row.original;
-
-        // Only show actions if current user is Admin (role 2) and not editing themselves
         const showActions = sessionUserRole === 2 && sessionUserId !== dev.id;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -88,6 +112,12 @@ export const getColumns = ({
                 <DropdownMenuItem>
                   <Link href={`/devs/${dev.id}`}>View customer</Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => onStartPrivateChat && onStartPrivateChat(dev.id, dev.name)}
+                >
+                  Start Chat
+                </DropdownMenuItem>
               </DropdownMenuContent>
             )}
           </DropdownMenu>
@@ -100,9 +130,7 @@ export const getColumns = ({
       cell: ({ row }) => {
         const dev = row.original;
         const roleValue = String(dev.role ?? "0");
-
         const canEditRole = sessionUserRole === 2 && sessionUserId !== dev.id;
-
         return (
           <div>
             {canEditRole ? (
@@ -142,4 +170,7 @@ export const getColumns = ({
         );
       },
     }
-  ]
+  );
+
+  return baseColumns;
+}

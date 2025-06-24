@@ -5,14 +5,13 @@ import { Menu, Send, Smile, Paperclip,  Users } from "lucide-react"
 import { useConnectedUserStore } from "@/stores/socketIo/connectedUsers"
 import { useChat } from "@/hooks/useChat"
 import { useSession } from "next-auth/react"
-import Image from "next/image"
+
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+
 import { Card } from "@/components/ui/card"
 import { toast } from "react-toastify"
 import ChatSidebar from "@/components/chat/chat-sidebar"
-import { getChatName, getChatAvatar, getLastMessage, getOtherUsers } from '@/lib/chat-utils'
-import { useChatUtils } from '@/hooks/useChatUtils'
+
 import ChatHeader from '@/components/chat/ChatHeader'
 import ChatMessages from '@/components/chat/ChatMessages'
 import MessageInput from '@/components/chat/MessageInput'

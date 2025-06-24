@@ -37,6 +37,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "i.pravatar.cc",
+      },
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
       }
 
     ],
