@@ -12,6 +12,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/stores/socketIo/notificationStore";
+import axios from "axios";
 function NotificationPage() {
     const { notifications } = useNotificationStore();
     const {
@@ -19,6 +20,13 @@ function NotificationPage() {
         markAsRead,
         markAllAsRead,
     } = useNotification();
+
+
+    useEffect(() => {
+        axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`).then((res) => {
+            console.log(res.data,'notifications');
+        });
+    }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
     console.log(notifications)
