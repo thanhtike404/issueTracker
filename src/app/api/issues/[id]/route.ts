@@ -6,11 +6,51 @@ import sharp from 'sharp';
 import { Buffer } from 'buffer';
 import { deleteFromCloudinary } from '@/lib/cloudinary';
 
-
-export async function PATCH(request: NextRequest, props: { params: Promise<{ id: number }> }) {
-  const params = await props.params;
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const issueId = Number(params.id);
+    const issueId = parseInt(params.id);
+
+    if (isNaN(issueId)) {
+      return NextResponse.json({ error: 'Invalid issue ID format' }, { status: 400 });
+    }
+
+    const issue = await prisma.issue.findUnique({
+      where: { id: issueId },
+      include: {
+        issueImages: {
+          select: {
+            id: true,
+            imageUrl: true,
+            storageType: true,
+          }
+        },
+        assignedToUser: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          }
+        }
+      }
+    });
+
+    if (!issue) {
+      return NextResponse.json({ error: 'Issue not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(issue);
+  } catch (error) {
+    console.error('Error fetching issue:', error);
+    return NextResponse.json({ error: 'Failed to fetch issue' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const issueId = parseInt(params.id);
+    if (isNaN(issueId)) {
+      return NextResponse.json({ error: 'Invalid issue ID' }, { status: 400 });
+    }
 
     // Check if the issue exists
     const existingIssue = await prisma.issue.findFirst({ where: { id: issueId } });
@@ -123,11 +163,13 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   }
 }
 
-export async function DELETE(request: NextRequest, props: { params: Promise<{ id: number }> }) {
-  const params = await props.params;
-
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const issueId = Number(params.id);
+    const issueId = parseInt(params.id);
+    if (isNaN(issueId)) {
+      return NextResponse.json({ error: 'Invalid issue ID' }, { status: 400 });
+    }
+
     // Find the issue with its images
     const findIssue = await prisma.issue.findUnique({
       where: { id: issueId },

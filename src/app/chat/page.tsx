@@ -5,6 +5,7 @@ import { Menu, Send, Smile, Paperclip,  Users } from "lucide-react"
 import { useConnectedUserStore } from "@/stores/socketIo/connectedUsers"
 import { useChat } from "@/hooks/useChat"
 import { useSession } from "next-auth/react"
+import { useChatStore } from '@/stores/socketIo/chatStore'
 
 import { Button } from "@/components/ui/button"
 
@@ -45,6 +46,8 @@ export default function ChatPage() {
     selectChat,
     clearError
   } = useChat()
+
+  const { messagesLoading } = useChatStore()
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -195,6 +198,7 @@ export default function ChatPage() {
             messages={messages}
             activeChat={activeChat}
             session={session}
+            messagesLoading={messagesLoading}
           />
         </main>
 

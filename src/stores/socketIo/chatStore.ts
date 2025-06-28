@@ -49,6 +49,7 @@ interface ChatStore {
   activeChat: Chat | null;
   messages: ChatMessage[];
   loading: boolean;
+  messagesLoading: boolean;
   error: string | null;
   
   // Actions
@@ -61,6 +62,7 @@ interface ChatStore {
   addChat: (userChat: UserChat) => void;
   updateChat: (chatId: string, updates: Partial<Chat>) => void;
   setLoading: (loading: boolean) => void;
+  setMessagesLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
   reset: () => void;
@@ -73,6 +75,7 @@ export const useChatStore = create<ChatStore>()(
       activeChat: null,
       messages: [],
       loading: false,
+      messagesLoading: false,
       error: null,
 
       setChats: (chats) => set({ chats }),
@@ -184,6 +187,8 @@ export const useChatStore = create<ChatStore>()(
 
       setLoading: (loading) => set({ loading }),
       
+      setMessagesLoading: (loading) => set({ messagesLoading: loading }),
+      
       setError: (error) => set({ error }),
       
       clearError: () => set({ error: null }),
@@ -193,6 +198,7 @@ export const useChatStore = create<ChatStore>()(
         activeChat: null,
         messages: [],
         loading: false,
+        messagesLoading: false,
         error: null
       })
     }),

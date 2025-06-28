@@ -4,9 +4,10 @@ interface ChatMessagesProps {
   messages: any[];
   activeChat: any;
   session: any;
+  messagesLoading?: boolean;
 }
 
-export default function ChatMessages({ messages, activeChat, session }: ChatMessagesProps) {
+export default function ChatMessages({ messages, activeChat, session, messagesLoading }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,6 +20,14 @@ export default function ChatMessages({ messages, activeChat, session }: ChatMess
         <div className="text-center text-muted-foreground">
           <span className="block mb-4">Select a chat to start messaging</span>
         </div>
+      </div>
+    );
+  }
+
+  if (messagesLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center text-muted-foreground">Loading messages…</div>
       </div>
     );
   }

@@ -25,7 +25,8 @@ export const useChat = () => {
     updateChat,
     setLoading,
     setError,
-    clearError
+    clearError,
+    setMessagesLoading
   } = useChatStore();
 
   // Fetch user chats
@@ -63,7 +64,7 @@ export const useChat = () => {
 
     socket.emit('create-chat', { name, type, memberIds, avatar }, (response: any) => {
       if (response.success) {
-        // Chat will be added via socket event
+        // Chat will be added via sockeuseCallbackt event
         toast.success('Chat created successfully');
       } else {
         toast.error(response.error || 'Failed to create chat');
@@ -75,9 +76,9 @@ export const useChat = () => {
   const fetchChatMessages = useCallback((chatId: string) => {
     if (!socket || !chatId) return;
 
-    setLoading(true);
+    setMessagesLoading(true);
     socket.emit('get-chat-messages', { chatId }, (response: any) => {
-      setLoading(false);
+      setMessagesLoading(false);
       if (response.success) {
         setMessages(response.messages);
       } else {
@@ -85,7 +86,7 @@ export const useChat = () => {
         toast.error(response.error || 'Failed to fetch messages');
       }
     });
-  }, [socket, setMessages, setLoading, setError]);
+  }, [socket, setMessages, setMessagesLoading, setError]);
 
   // Join chat room
   const joinChat = useCallback((chatId: string) => {
