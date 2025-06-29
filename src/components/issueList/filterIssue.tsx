@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -10,14 +9,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const FilterComponent = ({ selectedStatus }: { selectedStatus: string }) => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface FilterIssueProps {
+  selectedStatus: string;
+  onStatusChange?: (status: string) => void;
+}
 
-  const handleChange = (value: any) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('status', value);
-    router.push(`?${params.toString()}`);
+const FilterComponent = ({ selectedStatus, onStatusChange }: FilterIssueProps) => {
+  const handleChange = (value: string) => {
+    onStatusChange?.(value);
   };
 
   return (

@@ -22,14 +22,14 @@ function NotificationPage() {
     } = useNotification();
 
 
-    useEffect(() => {
-        axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`).then((res) => {
-            console.log(res.data,'notifications');
-        });
-    }, []);
+    // useEffect(() => {
+    //     axios.get(`${process.env.NEXT_PUBLIC_SOCKET_URL}/notifications`).then((res) => {
+    //         console.log(res.data,'notifications');
+    //     });
+    // }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
-    console.log(notifications)
+
 
     const unreadNotifications = notifications.filter(n => !n.read);
     const readNotifications = notifications.filter(n => n.read);

@@ -29,7 +29,7 @@ export default async function Page(props: IssueProps) {
       assignedToUser: { select: { id: true, name: true, email: true, image: true } },
     },
   });
-
+  console.log(issue,'isue image')
   if (!issue) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-900 dark:via-purple-900 dark:to-pink-900 text-white">
@@ -97,7 +97,7 @@ export default async function Page(props: IssueProps) {
   };
 
   const priorityDetails = getPriorityDetails(issue.priority);
-
+  console.log(issue);
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-8 pb-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">

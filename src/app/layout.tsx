@@ -7,7 +7,6 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import '@radix-ui/themes/styles.css';
 import { Theme } from '@radix-ui/themes';
 
-import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import Provider from '@/providers/provider';
 import 'react-toastify/dist/ReactToastify.css';
 // 
@@ -26,11 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html>
       {/* <body className={inter.className}> */}
       <body>
         <Provider>
-          <Theme>
+          <Theme appearance="dark">
             <Navbar />
             <ReactQueryDevtools initialIsOpen={false} />
             <ToastContainer />

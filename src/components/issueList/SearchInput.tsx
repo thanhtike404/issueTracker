@@ -1,28 +1,21 @@
 'use client';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 
-export function SearchInput() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface SearchInputProps {
+  onSearchChange?: (search: string) => void;
+}
 
-  const onChangeHandler = (e: any) => {
-    const params = new URLSearchParams(searchParams.toString());
+export function SearchInput({ onSearchChange }: SearchInputProps) {
+  const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchValue = e.target.value;
-
-    if (searchValue.length > 0) {
-      params.set('search', searchValue);
-    } else {
-      params.delete('search');
-    }
-    router.push(`?${params.toString()}`);
+    onSearchChange?.(searchValue);
   };
 
   return (
     <Input
       type="text"
       placeholder="Search"
-      onChange={(e) => onChangeHandler(e)}
+      onChange={onChangeHandler}
     />
   );
 }

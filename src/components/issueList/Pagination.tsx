@@ -1,5 +1,4 @@
 'use client';
-import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Pagination,
   PaginationContent,
@@ -10,18 +9,21 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 
-export function PaginationDemo({ itemCount, pageSize, currentPage }: any) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+interface PaginationDemoProps {
+  itemCount: number;
+  pageSize: number;
+  currentPage: number;
+  onPageChange?: (page: number) => void;
+}
+
+export function PaginationDemo({ itemCount, pageSize, currentPage, onPageChange }: PaginationDemoProps) {
   const pageCount = Math.ceil(Number(itemCount) / Number(pageSize));
   const page = Number(currentPage);
 
   if (pageCount <= 1) return null;
 
   const handlePageChange = (newPage: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', newPage.toString());
-    router.push(`?${params.toString()}`);
+    onPageChange?.(newPage);
   };
 
   const createPageLinks = () => {
@@ -89,19 +91,33 @@ export function PaginationDemo({ itemCount, pageSize, currentPage }: any) {
     <Pagination className="float-end">
       <PaginationContent>
         <PaginationItem>
-          <PaginationPrevious
-            href="#"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
-          />
+          {page > 1 ? (
+            <PaginationPrevious
+              href="#"
+              onClick={() => handlePageChange(page - 1)}
+            />
+          ) : (
+            <PaginationPrevious
+              href="#"
+              onClick={() => handlePageChange(page - 1)}
+              className="pointer-events-none opacity-50"
+            />
+          )}
         </PaginationItem>
         {createPageLinks()}
         <PaginationItem>
-          <PaginationNext
-            href="#"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= pageCount}
-          />
+          {page < pageCount ? (
+            <PaginationNext
+              href="#"
+              onClick={() => handlePageChange(page + 1)}
+            />
+          ) : (
+            <PaginationNext
+              href="#"
+              onClick={() => handlePageChange(page + 1)}
+              className="pointer-events-none opacity-50"
+            />
+          )}
         </PaginationItem>
       </PaginationContent>
     </Pagination>
