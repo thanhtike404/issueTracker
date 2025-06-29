@@ -54,7 +54,7 @@ export const getColumns = ({
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => <Link  href={`/profile/${row.original.id}`}>{row.getValue("name")}</Link>,
     },
     {
       accessorKey: "email",

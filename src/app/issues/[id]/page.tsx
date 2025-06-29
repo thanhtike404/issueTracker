@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import prisma from '../../../../prisma/client';
 import ResponseSection from './responseSection';
 import IssueImages from './IssueImages';
+import Link from 'next/link';
 import {
   ClockIcon,
   CalendarIcon,
@@ -195,7 +196,7 @@ export default async function Page(props: IssueProps) {
                 {/* Creator */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Created by</h3>
-                  <div className="flex items-center space-x-3">
+                  <Link href={`/profile/${issue.userId}`} className="flex items-center space-x-3">
                     <Avatar className="h-10 w-10 border-2 border-white dark:border-gray-700">
                       <AvatarImage src={issue.user?.image || ''} alt={issue.user?.name || ''} />
                       <AvatarFallback className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200">
@@ -206,14 +207,15 @@ export default async function Page(props: IssueProps) {
                       <p className="text-sm font-medium text-gray-900 dark:text-white">{issue.user?.name || 'Unknown User'}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{issue.user?.email || ''}</p>
                     </div>
-                  </div>
+                  </Link>
                 </div>
 
                 {/* Assignee */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Assigned to</h3>
+                  
                   {issue.assignedToUser ? (
-                    <div className="flex items-center space-x-3">
+                    <Link href={`/profile/${issue.assignedToUser.id}`} className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10 border-2 border-white dark:border-gray-700">
                         <AvatarImage src={issue.assignedToUser?.image || ''} alt={issue.assignedToUser?.name || ''} />
                         <AvatarFallback className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
@@ -224,7 +226,7 @@ export default async function Page(props: IssueProps) {
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{issue.assignedToUser?.name}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">{issue.assignedToUser?.email || ''}</p>
                       </div>
-                    </div>
+                    </Link>
                   ) : (
                     <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-sm text-gray-700 dark:text-gray-300">
                       Not currently assigned to anyone

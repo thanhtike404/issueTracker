@@ -12,6 +12,10 @@ import 'react-toastify/dist/ReactToastify.css';
 // 
 import { ToastContainer } from 'react-toastify';
 import SocketSessionHandler from '@/lib/SocketSessionHandler';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
+
 
 export const metadata: Metadata = {
   title: ' issue tracker',
@@ -26,16 +30,16 @@ export default function RootLayout({
 }) {
   return (
     <html>
-      {/* <body className={inter.className}> */}
-      <body>
+      <body className={inter.className}>
+
         <Provider>
-          <Theme appearance="dark">
+          {/* <Theme appearance="dark"> */}
             <Navbar />
             <ReactQueryDevtools initialIsOpen={false} />
             <ToastContainer />
             <SocketSessionHandler />
-            <main className="p-5">{children}</main>
-          </Theme>
+            <div >{children}</div>
+          {/* </Theme> */}
         </Provider>
       </body>
     </html>

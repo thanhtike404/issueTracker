@@ -6,7 +6,7 @@ import sharp from 'sharp';
 import { Buffer } from 'buffer';
 import { deleteFromCloudinary } from '@/lib/cloudinary';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export const GET = async (request: NextRequest, { params }: { params: { id: string } }) => {
   try {
     const issueId = parseInt(params.id);
 
@@ -43,22 +43,20 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     console.error('Error fetching issue:', error);
     return NextResponse.json({ error: 'Failed to fetch issue' }, { status: 500 });
   }
-}
+};
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export const PATCH = async (request: NextRequest, { params }: { params: { id: string } }) => {
   try {
     const issueId = parseInt(params.id);
     if (isNaN(issueId)) {
       return NextResponse.json({ error: 'Invalid issue ID' }, { status: 400 });
     }
 
-    // Check if the issue exists
     const existingIssue = await prisma.issue.findFirst({ where: { id: issueId } });
     if (!existingIssue) {
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 });
     }
 
-    // Parse form data
     const formData = await request.formData();
     const userId = formData.get('user_id')?.toString();
     const title = formData.get('title')?.toString();
@@ -71,31 +69,26 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const files = formData.getAll('images') as File[];
     const deleteImages = JSON.parse(formData.get('delete_images') as string || '[]');
 
-    // Convert dates to ISO-8601 format
     const assignedDate = assignDate ? new Date(assignDate).toISOString() : null;
     const deadlineDateISO = deadlineDate ? new Date(deadlineDate).toISOString() : null;
 
-    // Validate input
     const validation = patchIssueSchema.safeParse({ userId, title, description, priority });
     if (!validation.success) {
       return NextResponse.json(validation.error.errors, { status: 400 });
     }
 
-    // Delete specified images
     if (files.length > 0) {
       for (const imageUrl of deleteImages) {
         try {
           await prisma.issueImage.deleteMany({ where: { issueId, imageUrl } });
         } catch (deleteError) {
           console.error('Failed to delete image:', deleteError);
-
         }
       }
     }
 
     const uploadResults = [];
 
-    // Upload new images to Cloudinary
     for (const file of files) {
       if (file instanceof File) {
         const fileName = `${Date.now()}_${Math.floor(Math.random() * 10000)}.webp`;
@@ -105,7 +98,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
         let imageUrl = '';
         try {
-          // Upload to Cloudinary
           const cloudinaryResult = await new Promise<any>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
               { resource_type: 'image', public_id: fileName, format: 'webp' },
@@ -134,20 +126,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       }
     }
 
-    // Update issue details in Prisma
     const updatedIssue = await prisma.issue.update({
       where: { id: issueId },
       data: {
         title,
         description,
-        // @ts-ignore
         priority,
         assignedToUserId: assignedUserId,
-        // @ts-ignore
-
         status,
-        assignedDate, // Updated date
-        deadlineDate: deadlineDateISO, // Updated date
+        assignedDate,
+        deadlineDate: deadlineDateISO,
       },
     });
 
@@ -161,16 +149,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     console.error('Error updating issue:', error);
     return NextResponse.json({ error: 'Failed to update issue' }, { status: 500 });
   }
-}
+};
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export const DELETE = async (request: NextRequest, { params }: { params: { id: string } }) => {
   try {
     const issueId = parseInt(params.id);
     if (isNaN(issueId)) {
       return NextResponse.json({ error: 'Invalid issue ID' }, { status: 400 });
     }
 
-    // Find the issue with its images
     const findIssue = await prisma.issue.findUnique({
       where: { id: issueId },
       include: {
@@ -188,7 +175,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Issue not found' }, { status: 404 });
     }
 
-    // Delete images from Cloudinary first
     const deletionResults = [];
     if (findIssue?.issueImages?.length) {
       for (const image of findIssue.issueImages) {
@@ -213,7 +199,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       }
     }
 
-
     const deletedIssue = await prisma.issue.delete({ where: { id: issueId } });
 
     return NextResponse.json({
@@ -226,4 +211,4 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     console.error('Error deleting issue:', error);
     return NextResponse.json({ error: 'Failed to delete issue' }, { status: 500 });
   }
-}
+};
